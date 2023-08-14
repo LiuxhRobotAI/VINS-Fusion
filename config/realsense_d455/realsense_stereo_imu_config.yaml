@@ -2,24 +2,25 @@
 
 #common parameters
 #support: 1 imu 1 cam; 1 imu 2 cam: 2 cam; 
-imu: 1         
-num_of_cam: 2  
+imu: 1
+num_of_cam: 2
 
-imu_topic: "/imu/data_raw"
+imu_topic: "/camera/imu"
 image0_topic: "/camera/infra1/image_rect_raw"
 image1_topic: "/camera/infra2/image_rect_raw"
-output_path: "/home/administrator/Downloads/rosbag_restore_xh/vins-fusion/"
+output_path: "~/Downloads/vins-fusion/output/"
 
 cam0_calib: "left.yaml"
 cam1_calib: "right.yaml"
 image_width: 848
 image_height: 480
-   
+
 
 # Extrinsic parameter between IMU and Camera.
 estimate_extrinsic: 1   # 0  Have an accurate extrinsic parameters. We will trust the following imu^R_cam, imu^T_cam, don't change it.
                         # 1  Have an initial guess about extrinsic parameters. We will optimize around your initial guess.
 
+#Transformation: from camera to imu
 body_T_cam0: !!opencv-matrix
    rows: 4
    cols: 4
@@ -31,6 +32,11 @@ body_T_cam0: !!opencv-matrix
        1.0457519809151661e-03, -9.9999129084997906e-01,
        -4.0403746097850135e-03, 2.8559824645148020e-03, 0., 0., 0., 1. ]
 
+    # [0.833118538385601, 0.19732494483423724, 0.5166975586785792, -0.035121983067985835,
+    #  -0.508845774320797, 0.6395813159760503, 0.5762045801711498, 0.025262163315159764,
+    #  -0.21677056754575139, -0.7429660869787448, 0.6332550154916926, 0.03251580640210562,
+    #  0.0, 0.0, 0.0, 1.0]
+
 body_T_cam1: !!opencv-matrix
    rows: 4
    cols: 4
@@ -41,6 +47,11 @@ body_T_cam1: !!opencv-matrix
        -1.0007788055728661e-03, -5.2435791444330505e-02,
        3.8299766679101843e-03, -9.9999259827824449e-01,
        3.6697063849344680e-04, 8.6931302450199057e-03, 0., 0., 0., 1. ]
+
+    # [0.8327600233196676, 0.1947242604572416, 0.5182597861594194, -0.1422104674375537,
+    #  -0.5070947292342183, 0.643953722291711, 0.5728686927468849, 0.02073312541444457,
+    #  -0.22218388587722035, -0.739868951866498, 0.6350025629243303, 0.08141371681899295,
+    #  0.0, 0.0, 0.0, 1.0]
 
 #Multiple thread support
 multiple_thread: 1
@@ -63,7 +74,7 @@ acc_n: 0.1          # accelerometer measurement noise standard deviation. #0.2  
 gyr_n: 0.01         # gyroscope measurement noise standard deviation.     #0.05  0.004
 acc_w: 0.001         # accelerometer bias random work noise standard deviation.  #0.002
 gyr_w: 0.0001       # gyroscope bias random work noise standard deviation.     #4.0e-5
-g_norm: 9.805         # gravity magnitude
+g_norm: 9.78 #9.805         # gravity magnitude
 
 #unsynchronization parameters
 estimate_td: 1                      # online estimate time offset between camera and imu
@@ -71,5 +82,5 @@ td: 0.00                             # initial value of time offset. unit: s. re
 
 #loop closure parameters
 load_previous_pose_graph: 0        # load and reuse previous pose graph; load from 'pose_graph_save_path'
-pose_graph_save_path: "/home/dji/output/pose_graph/" # save and load path
+pose_graph_save_path: "~/Downloads/vins-fusion/output/pose_graph/" # save and load path
 save_image: 0                   # save image in pose graph for visualization prupose; you can close this function by setting 0 
