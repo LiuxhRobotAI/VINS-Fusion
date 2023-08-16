@@ -16,7 +16,6 @@
     <arg name="color_fps"           value="30"/>
 
 
-
     <arg name="infra_width"         value="640"/>
     <arg name="infra_height"        value="480"/>
     <arg name="enable_infra"        value="false"/>
@@ -30,10 +29,19 @@
     <arg name="unite_imu_method"      value="linear_interpolation"/>
 
 
-
     <arg name="filters"             value="decimation, disparity, spatial, temporal, hole_filling"/>
 
   </include>
+
+    <!-- rosrun rqt_reconfigure rqt_reconfigure -->
+    <!-- rosparam set /camera/stereo_module/emitter_enabled 0 -->
+    <arg name="emitter_enable"     default="false"/>
+    <rosparam>
+      /camera/stereo_module/emitter_enabled: 0
+    </rosparam>
+    <rosparam if="$(arg emitter_enable)">
+      /camera/stereo_module/emitter_enabled: 1
+    </rosparam>
 
   <node pkg="tf" type="static_transform_publisher" name="camera_lidar_link" args="0.02 0 0 0 0 0 1 ouster_holder_base_link camera_link 100" /> 
 
