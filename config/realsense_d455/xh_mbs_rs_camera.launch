@@ -16,12 +16,11 @@
     <arg name="color_fps"           value="30"/>
 
 
-    <arg name="infra_width"         value="848"/>
+    <arg name="infra_width"         value="640"/>
     <arg name="infra_height"        value="480"/>
-    <arg name="enable_infra"        value="false"/>
+    <arg name="enable_infra"        value="true"/>
     <arg name="enable_infra1"       value="true"/>
     <arg name="enable_infra2"       value="true"/>
-
 
     <arg name="enable_gyro"         value="true"/>
     <arg name="enable_accel"        value="true"/>
