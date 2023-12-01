@@ -12,6 +12,7 @@
 #include "ros/ros.h"
 #include "globalOpt.h"
 #include <sensor_msgs/NavSatFix.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/Path.h>
 #include <eigen3/Eigen/Dense>
@@ -30,6 +31,7 @@ nav_msgs::Path *global_path;
 double last_vio_t = -1;
 std::queue<sensor_msgs::NavSatFixConstPtr> gpsQueue;
 std::mutex m_buf;
+std::queue<geometry_msgs::PoseStamped::ConstPtr> uwbQueue; // For UWB; geometry_msgs::Vector3StampedConstPtr
 
 void publish_car_model(double t, Eigen::Vector3d t_w_car, Eigen::Quaterniond q_w_car)
 {
@@ -78,6 +80,15 @@ void GPS_callback(const sensor_msgs::NavSatFixConstPtr &GPS_msg)
     m_buf.unlock();
 }
 
+/* For UWB localization */
+void UWB_callback(const geometry_msgs::PoseStamped::ConstPtr &UWB_msg)
+{
+    //printf("uwb_callback! \n");
+    m_buf.lock();
+    uwbQueue.push(UWB_msg);
+    m_buf.unlock();
+}
+
 void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
 {
     //printf("vio_callback! \n");
@@ -90,7 +101,6 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
     vio_q.y() = pose_msg->pose.pose.orientation.y;
     vio_q.z() = pose_msg->pose.pose.orientation.z;
     globalEstimator.inputOdom(t, vio_t, vio_q);
-
 
     m_buf.lock();
     while(!gpsQueue.empty())
@@ -118,6 +128,36 @@ void vio_callback(const nav_msgs::Odometry::ConstPtr &pose_msg)
         else if(gps_t < t - 0.01)
             gpsQueue.pop();
         else if(gps_t > t + 0.01)
+            break;
+    }
+    m_buf.unlock();
+
+    /* For UWB localization */
+    m_buf.lock();
+    while(!uwbQueue.empty())
+    {
+        geometry_msgs::PoseStamped::ConstPtr UWB_msg = uwbQueue.front();
+        double uwb_t = UWB_msg->header.stamp.toSec();
+        printf("vio t: %f, uwb t: %f \n", t, uwb_t);
+        // 100ms sync tolerance
+        if(uwb_t >= t - 0.1 && uwb_t <= t + 0.1)
+        {
+            //printf("receive UWB with timestamp %f\n", UWB_msg->header.stamp.toSec());
+            double x = UWB_msg->pose.position.x;
+            double y = UWB_msg->pose.position.y;
+            double z = UWB_msg->pose.position.z;
+            double pos_accuracy = 1; // UWB_msg->position_covariance[0];
+            if(pos_accuracy <= 0)
+                pos_accuracy = 1;
+            //printf("receive covariance %lf \n", pos_accuracy);
+            //if(UWB_msg->status.status > 8)
+                globalEstimator.inputUWB(t, x, y, z, pos_accuracy);
+            uwbQueue.pop();
+            break;
+        }
+        else if(uwb_t < t - 0.1)
+            uwbQueue.pop();
+        else if(uwb_t > t + 0.1)
             break;
     }
     m_buf.unlock();
@@ -166,6 +206,7 @@ int main(int argc, char **argv)
     global_path = &globalEstimator.global_path;
 
     ros::Subscriber sub_GPS = n.subscribe("/gps", 100, GPS_callback);
+    ros::Subscriber sub_UWB = n.subscribe("/uwb/localization/tag/hr_position", 100, UWB_callback);
     ros::Subscriber sub_vio = n.subscribe("/vins_estimator/odometry", 100, vio_callback);
     pub_global_path = n.advertise<nav_msgs::Path>("global_path", 100);
     pub_global_odometry = n.advertise<nav_msgs::Odometry>("global_odometry", 100);

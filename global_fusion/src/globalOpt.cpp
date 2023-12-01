@@ -87,6 +87,17 @@ void GlobalOptimization::inputGPS(double t, double latitude, double longitude, d
 
 }
 
+/* Use the same global factor with GPS as they not appear in the same situation. */
+void GlobalOptimization::inputUWB(double t, double x, double y, double z, double posAccuracy)
+{
+    vector<double> tmp{x, y, z, posAccuracy};
+    //printf("new gps: t: %f x: %f y: %f z:%f \n", t, tmp[0], tmp[1], tmp[2]);
+    // UWBPositionMap[t] = tmp;
+    // newUWB = true;
+    GPSPositionMap[t] = tmp;
+    newGPS = true;
+}
+
 void GlobalOptimization::optimize()
 {
     while(true)
