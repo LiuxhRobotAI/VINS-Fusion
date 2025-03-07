@@ -3,6 +3,9 @@
   <arg name="use_map_topic" default="false"/>
 
   <include file="$(find realsense2_camera)/launch/rs_camera.launch">
+  <!-- See https://github.com/IntelRealSense/realsense-ros and-->
+  <!-- <arg name="enable_sync"               default="false"/> -->
+    <arg name="enable_sync"               value="true"/>
     <!-- <arg name="align_depth"               default="false"/> -->
     <arg name="align_depth"         value="true"/>
     <arg name="depth_width"         value="640"/>
